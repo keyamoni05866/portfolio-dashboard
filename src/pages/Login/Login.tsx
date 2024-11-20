@@ -1,16 +1,43 @@
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { useLoginUserMutation } from "../../Redux/features/auth/authApi";
+import { useDispatch } from "react-redux";
+import { signUser } from "../../Redux/features/auth/authSlice";
+
+type LoginFormData = {
+  email: string;
+  password: string;
+};
 
 const Login = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<any>();
+  const { register, handleSubmit } = useForm<LoginFormData>();
+  const [login] = useLoginUserMutation();
+  const dispatch = useDispatch();
+  const handleLogin = async (data: LoginFormData) => {
+    console.log(data);
+    const toastId = toast.loading("Sign In", { duration: 1000 });
+    try {
+      const res = await login(data).unwrap();
+      console.log(res);
+      toast.success("logged In", { id: toastId, duration: 2000 });
+      const userInfo = res?.data?.user;
+      const token = res?.data?.token;
+      dispatch(signUser({ userInfo, token }));
 
+      // if (userInfo.role === "admin") {
+      //   navigate(`/${userInfo.role}/dashboard`);
+      // }
+    } catch (err) {
+      toast.error(
+        "Something Went Wrong!! Please use valid email or provide correct password",
+        { id: toastId, duration: 3000 }
+      );
+    }
+  };
   return (
     <div className="  min-h-screen flex items-center justify-center  bg-gray-100 px-4 lg:px-0 ">
       <div className="bg-gray-200 rounded-xl w-full p-5  lg:w-[600px] lg:p-10">
-        <form>
+        <form onSubmit={handleSubmit(handleLogin)}>
           <div className="grid grid-cols-1  gap-2   mb-2 ">
             <h4 className=" text-4xl font-semibold text-center uppercase">
               Login !!!
