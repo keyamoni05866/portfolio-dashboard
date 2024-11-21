@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useLoginUserMutation } from "../../Redux/features/auth/authApi";
 import { useDispatch } from "react-redux";
 import { signUser } from "../../Redux/features/auth/authSlice";
+import { useNavigate } from "react-router-dom";
 
 type LoginFormData = {
   email: string;
@@ -13,6 +14,7 @@ const Login = () => {
   const { register, handleSubmit } = useForm<LoginFormData>();
   const [login] = useLoginUserMutation();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleLogin = async (data: LoginFormData) => {
     console.log(data);
     const toastId = toast.loading("Sign In", { duration: 1000 });
@@ -24,9 +26,9 @@ const Login = () => {
       const token = res?.data?.token;
       dispatch(signUser({ userInfo, token }));
 
-      // if (userInfo.role === "admin") {
-      //   navigate(`/${userInfo.role}/dashboard`);
-      // }
+      if (userInfo.role === "admin") {
+        navigate(`/${userInfo.role}/dashboard`);
+      }
     } catch (err) {
       toast.error(
         "Something Went Wrong!! Please use valid email or provide correct password",
