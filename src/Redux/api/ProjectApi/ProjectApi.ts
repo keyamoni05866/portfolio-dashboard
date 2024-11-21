@@ -19,9 +19,9 @@ const projectApi = baseApi.injectEndpoints({
     }),
     updateProjects: builder.mutation({
       query: (data) => {
-        console.log(data);
+        // console.log(data);
         return {
-          url: `/projects/update-projects/${data._id}`,
+          url: `/projects/update-project/${data._id}`,
           method: "PATCH",
           body: data,
         };

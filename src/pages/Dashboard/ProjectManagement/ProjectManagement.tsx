@@ -1,27 +1,16 @@
 import { useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import {
-  Button,
-  Divider,
-  Modal,
-  Popconfirm,
-  Table,
-  TableColumnsType,
-} from "antd";
-import {
-  useCreateSkillMutation,
-  useDeleteSkillMutation,
-  useGetAllSkillQuery,
-  useUpdateSkillMutation,
-} from "../../../Redux/api/SkillApi/skillApi";
+import { Divider, Modal, Table, TableColumnsType } from "antd";
+
 import { ImageUploadFunc } from "../../../utils";
 import { toast } from "sonner";
-import { TProjects, TSkill } from "../../../types";
+import { TProjects } from "../../../types";
 import {
   useCreateProjectMutation,
   useDeleteProjectMutation,
   useGetAllProjectQuery,
 } from "../../../Redux/api/ProjectApi/ProjectApi";
+import { Link } from "react-router-dom";
 
 export type TTableData = Pick<TProjects, "title" | "image" | "description">;
 
@@ -41,26 +30,32 @@ const ProjectManagement = () => {
         const imageUrl = await ImageUploadFunc(file);
 
         data.image = imageUrl;
+
+        if (typeof data.features === "string") {
+          data.features = (data.features as string)
+            ?.split(",")
+            .map((feature: string) => feature.trim());
+        }
+        if (typeof data.technologies === "string") {
+          data.technologies = (data.technologies as string)
+            ?.split(",")
+            .map((technology: string) => technology.trim());
+        }
+        if (typeof data.credentials === "string") {
+          data.credentials = (data.credentials as string)
+            ?.split(",")
+            .map((credential: string) => credential.trim());
+        }
+        try {
+          const res = await createProject({ ...data }).unwrap();
+          toast.success(res.message, { duration: 3000 });
+          reset();
+          setModalOpen(false);
+        } catch (err: any) {}
       } catch (error: any) {
         toast.error(error.data.message, { duration: 1000 });
-
-        return;
       }
-    } else {
-      data.image = null;
     }
-
-    const skillData = {
-      name: data.name,
-      image: data.image || null,
-    };
-
-    try {
-      const res = await createProject(skillData).unwrap();
-      toast.success(res.message, { duration: 3000 });
-      reset();
-      setModalOpen(false);
-    } catch (err: any) {}
   };
 
   //   handle delete
@@ -115,18 +110,12 @@ const ProjectManagement = () => {
         // console.log(actionData);
         return (
           <div>
-            <button
-              //   onClick={() => {
-              //     setSelectedSkill({ _id: actionData.key, ...actionData });
-              //     setEditMode(true);
-              //     setModalOpen(true);
-              //     setValue("name", actionData.name);
-              //     setValue("image", actionData.image);
-              //   }}
+            <Link
+              to={`/admin/projectUpdate/${actionData.key}`}
               className="bg-blue-600 py-1 px-3 text-sm text-white rounded-xl me-3 "
             >
-              Edit
-            </button>
+              Update
+            </Link>
 
             <button
               onClick={() => handleDelete(actionData.key)}
@@ -170,7 +159,7 @@ const ProjectManagement = () => {
                   {...register("title", { required: "Title is Required" })}
                   type="text"
                   placeholder="Enter Your Project Title"
-                  className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 pl-7  text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
                 />
               </div>
             </div>
@@ -182,7 +171,7 @@ const ProjectManagement = () => {
                 <input
                   type="file"
                   {...register("image", { required: "Image is Required" })}
-                  className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6 "
+                  className="block w-full rounded-md border-0 py-1.5   text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6 "
                 />
               </div>
             </div>
@@ -199,8 +188,8 @@ const ProjectManagement = () => {
                     required: "Technologies is Required",
                   })}
                   type="text"
-                  placeholder="Enter Your Project Technologies using comma"
-                  className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
+                  placeholder="separate with comma"
+                  className="block w-full rounded-md border-0 py-1.5 pl-7  text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
                 />
               </div>
             </div>
@@ -212,8 +201,8 @@ const ProjectManagement = () => {
                 <input
                   {...register("features", { required: "Feature is Required" })}
                   type="text"
-                  placeholder="Enter Your Project Features using comma"
-                  className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
+                  placeholder="separate with comma"
+                  className="block w-full rounded-md border-0 py-1.5 pl-7  text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
                 />
               </div>
             </div>
@@ -228,7 +217,7 @@ const ProjectManagement = () => {
                   })}
                   type="text"
                   placeholder="Enter Your Project Title"
-                  className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
                 />
               </div>
             </div>
@@ -243,7 +232,7 @@ const ProjectManagement = () => {
                   })}
                   type="text"
                   placeholder="Enter Your Project Title"
-                  className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 pl-7  text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
                 />
               </div>
             </div>
@@ -258,7 +247,7 @@ const ProjectManagement = () => {
                   {...register("liveLink", { required: "Feature is Required" })}
                   type="text"
                   placeholder="Enter Your Project Live Link"
-                  className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 pl-7  text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
                 />
               </div>
             </div>
@@ -272,8 +261,8 @@ const ProjectManagement = () => {
                     required: "credentials is Required",
                   })}
                   type="text"
-                  placeholder="Enter Your Project credentials using comma"
-                  className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
+                  placeholder="separate with comma"
+                  className="block w-full rounded-md border-0 py-1.5 pl-7  text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
                 />
               </div>
             </div>
@@ -309,10 +298,11 @@ const ProjectManagement = () => {
       <Divider style={{ borderColor: "#050c14" }}>Your Added Projects</Divider>
 
       <Table
-        className="max-w-[700px] mx-auto my-10"
+        className="lg:max-w-[800px] w-full lg:mx-auto my-10"
         loading={isFetching}
         columns={columns}
         dataSource={tableData}
+        size="small"
       />
     </div>
   );

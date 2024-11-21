@@ -1,22 +1,15 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import {
-  Button,
-  Divider,
-  Modal,
-  Popconfirm,
-  Table,
-  TableColumnsType,
-} from "antd";
+import { Divider, Modal, Table, TableColumnsType } from "antd";
 import {
   useCreateSkillMutation,
   useDeleteSkillMutation,
   useGetAllSkillQuery,
-  useUpdateSkillMutation,
 } from "../../../Redux/api/SkillApi/skillApi";
 import { ImageUploadFunc } from "../../../utils";
 import { toast } from "sonner";
 import { TSkill } from "../../../types";
+import { Link } from "react-router-dom";
 
 type SkillFormData = {
   name: string;
@@ -107,18 +100,12 @@ const SkillManagement = () => {
         // console.log(actionData);
         return (
           <div>
-            <button
-              //   onClick={() => {
-              //     setSelectedSkill({ _id: actionData.key, ...actionData });
-              //     setEditMode(true);
-              //     setModalOpen(true);
-              //     setValue("name", actionData.name);
-              //     setValue("image", actionData.image);
-              //   }}
+            <Link
+              to={`/admin/skillUpdate/${actionData.key}`}
               className="bg-blue-600 py-1 px-3 text-sm text-white rounded-xl me-3 "
             >
-              Edit
-            </button>
+              Update
+            </Link>
 
             <button
               onClick={() => handleDelete(actionData.key)}
