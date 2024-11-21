@@ -1,40 +1,31 @@
+import "react-quill/dist/quill.snow.css";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import {
-  Button,
-  Divider,
-  Modal,
-  Popconfirm,
-  Table,
-  TableColumnsType,
-} from "antd";
-import {
-  useCreateSkillMutation,
-  useDeleteSkillMutation,
-  useGetAllSkillQuery,
-  useUpdateSkillMutation,
-} from "../../../Redux/api/SkillApi/skillApi";
+import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { Divider, Modal, Table, TableColumnsType } from "antd";
+
 import { ImageUploadFunc } from "../../../utils";
 import { toast } from "sonner";
-import { TSkill } from "../../../types";
+import { TBlogs } from "../../../types";
+import {
+  useCreateBlogMutation,
+  useDeleteBlogMutation,
+  useGetAllBlogsQuery,
+} from "../../../Redux/api/BlogApi/BlogApi";
+import ReactQuill from "react-quill";
 
-type SkillFormData = {
-  name: string;
-  image: string | null;
-};
+export type TTableData = Pick<TBlogs, "title" | "image" | "description">;
 
-export type TTableData = Pick<TSkill, "name" | "image">;
-
-const SkillManagement = () => {
-  const { register, handleSubmit, reset } = useForm<SkillFormData>();
+const BlogManagement = () => {
+  const { register, handleSubmit, reset } = useForm<FieldValues>();
   const [modalOpen, setModalOpen] = useState(false);
+  const [value, setValue] = useState("");
 
-  const [createSkill] = useCreateSkillMutation();
-  const { data: skillData, isFetching } = useGetAllSkillQuery({});
-  const [deleteSkill] = useDeleteSkillMutation();
+  const [createBlog] = useCreateBlogMutation();
+  const { data: blogData, isFetching } = useGetAllBlogsQuery({});
+  const [deleteBlog] = useDeleteBlogMutation();
 
   //   console.log(skillData?.data);
-  const handleCreateSkill = async (data: SkillFormData) => {
+  const handleCreateBlog: SubmitHandler<FieldValues> = async (data) => {
     if (data.image && data.image.length > 0) {
       try {
         const file = data.image[0] as any;
@@ -56,7 +47,7 @@ const SkillManagement = () => {
     };
 
     try {
-      const res = await createSkill(skillData).unwrap();
+      const res = await createBlog(skillData).unwrap();
       toast.success(res.message, { duration: 3000 });
       reset();
       setModalOpen(false);
@@ -67,7 +58,7 @@ const SkillManagement = () => {
   const handleDelete = async (id: string) => {
     // console.log(id);
     try {
-      const res = await deleteSkill(id).unwrap();
+      const res = await deleteBlog(id).unwrap();
       toast.success(res.message, { duration: 3000 });
     } catch (err: any) {
       toast.error(err);
@@ -75,29 +66,33 @@ const SkillManagement = () => {
   };
 
   //   All data Table
-  const tableData = skillData?.data?.map(({ _id, name, image }: TSkill) => ({
-    key: _id,
-    name,
-    image,
-  }));
+  const tableData = blogData?.data?.map(
+    ({ _id, title, image, description }: TBlogs) => ({
+      key: _id,
+      title,
+      image,
+      description,
+    })
+  );
 
   const columns: TableColumnsType<TTableData> = [
     {
       title: "Image",
       dataIndex: "image",
       key: "image",
-      render: (skillImg: string) => (
-        <img
-          src={skillImg}
-          alt="skill Image"
-          className="rounded-full size-10"
-        />
+      render: (blogImg: string) => (
+        <img src={blogImg} alt="Blog Image" className="rounded-full size-10" />
       ),
     },
     {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
     },
 
     {
@@ -139,11 +134,11 @@ const SkillManagement = () => {
           className=" w-[40%] lg:w-[10%]  mt-5 py-3   rounded-3xl font-medium text-md  text-white bg-[#051c34] hover:bg-[#050c14]"
           onClick={() => setModalOpen(true)}
         >
-          Add Skill
+          Add Blog
         </button>
       </div>
       <Modal
-        title="Add Your Skill"
+        title="Describe Your Thought"
         style={{ top: 20 }}
         open={modalOpen}
         onCancel={() => {
@@ -151,15 +146,15 @@ const SkillManagement = () => {
         }}
         footer={null}
       >
-        <form onSubmit={handleSubmit(handleCreateSkill)}>
+        <form onSubmit={handleSubmit(handleCreateBlog)}>
           <div className="grid grid-cols-1  gap-2   mb-2 ">
             <div>
               <label className="block text-sm font-medium leading-6 ">
-                Skill Name :
+                Blog Title :
               </label>
               <div className="relative mt-2 rounded-md shadow-sm">
                 <input
-                  {...register("name", { required: "Name is Required" })}
+                  {...register("title", { required: "Title is Required" })}
                   type="text"
                   placeholder="Enter Your Skill Name"
                   className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6"
@@ -168,7 +163,7 @@ const SkillManagement = () => {
             </div>
             <div>
               <label className="block text-sm font-medium leading-6 text-gray-900">
-                Skill Image:
+                Blog Image:
               </label>
               <div className="relative mt-2 rounded-md shadow-sm">
                 <input
@@ -176,6 +171,17 @@ const SkillManagement = () => {
                   {...register("image", { required: "Image is Required" })}
                   className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400  sm:text-sm sm:leading-6 "
                 />
+              </div>
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium leading-6 "
+                htmlFor="description"
+              >
+                Blog Description :
+              </label>
+              <div className="relative mt-2 rounded-md shadow-sm">
+                <ReactQuill theme="snow" value={value} onChange={setValue} />
               </div>
             </div>
           </div>
@@ -190,7 +196,7 @@ const SkillManagement = () => {
           </div>
         </form>
       </Modal>
-      <Divider style={{ borderColor: "#050c14" }}>Your Added Skills</Divider>
+      <Divider style={{ borderColor: "#050c14" }}>Your Added Blogs</Divider>
 
       <Table
         className="max-w-[700px] mx-auto my-10"
@@ -202,4 +208,4 @@ const SkillManagement = () => {
   );
 };
 
-export default SkillManagement;
+export default BlogManagement;
